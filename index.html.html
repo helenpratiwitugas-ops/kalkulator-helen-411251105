@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Web Sederhana</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #ffadd2;
+        }
+
+        .calculator {
+            background-color: #ffbfdc;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(222, 115, 115, 0.3);
+        }
+
+        .screen {
+            width: 100%;
+            height: 80px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #f4f0f0;
+            border: none;
+            border-radius: 8px;
+            font-size: 2.5rem;
+            text-align: right;
+            outline: none;
+            cursor: default;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Warna tombol */
+        .num-btn {
+            background-color: hsl(330, 87%, 69%);
+            color: white;
+        }
+
+        .op-btn {
+            background-color: #b7afff;
+            color: white;
+        }
+
+        .func-btn {
+            background-color: #ff007f;
+            color: white;
+        }
+
+        .equal-btn {
+            background-color: oklab(62.941% 0.24206 -0.01923);
+            color: white;
+            grid-column: span 2; /* Tombol sama dengan mengambil 2 kolom */
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <input type="text" class="screen" value="0" readonly>
+        <div class="buttons">
+            <button class="btn func-btn" data-value="C">C</button>
+            <button class="btn func-btn" data-value="←">←</button>
+            <button class="btn op-btn" data-value="÷">÷</button>
+            <button class="btn op-btn" data-value="×">×</button>
+            
+            <button class="btn num-btn" data-value="7">7</button>
+            <button class="btn num-btn" data-value="8">8</button>
+            <button class="btn num-btn" data-value="9">9</button>
+            <button class="btn op-btn" data-value="-">-</button>
+            
+            <button class="btn num-btn" data-value="4">4</button>
+            <button class="btn num-btn" data-value="5">5</button>
+            <button class="btn num-btn" data-value="6">6</button>
+            <button class="btn op-btn" data-value="+">+</button>
+            
+            <button class="btn num-btn" data-value="1">1</button>
+            <button class="btn num-btn" data-value="2">2</button>
+            <button class="btn num-btn" data-value="3">3</button>
+            <button class="btn equal-btn" data-value="=">=</button>
+            
+            <button class="btn num-btn" data-value="00">00</button>
+            <button class="btn num-btn" data-value="0">0</button>
+            <button class="btn num-btn" data-value=".">.</button>
+        </div>
+    </div>
+
+    <script>
+        let buffer = "0";
+        let runningTotal = 0;
+        let previousOperator = null;
+        const screen = document.querySelector('.screen');
+
+        // Fungsi utama saat tombol diklik
+        function handleClick(event) {
+            const value = event.target.dataset.value;
+            if (!value) return; // Jika klik di luar tombol, abaikan
+
+            if (isNaN(value)) {
+                handleSymbol(value);
+            } else {
+                handleNumber(value);
+            }
+            updateScreen();
+        }
+
+        // Tangani tombol simbol (C, ←, +, -, ×, ÷, =)
+        function handleSymbol(symbol) {
+            switch (symbol) {
+                case 'C':
+                    buffer = "0";
+                    runningTotal = 0;
+                    previousOperator = null;
+                    break;
+                case '←':
+                    if (buffer.length === 1) {
+                        buffer = "0";
+                    } else {
+                        buffer = buffer.slice(0, -1);
+                    }
+                    break;
+                case '=':
+                    if (previousOperator === null) return;
+                    calculate(parseFloat(buffer));
+                    buffer = runningTotal.toString();
+                    runningTotal = 0;
+                    previousOperator = null;
+                    break;
+                case '+':
+                case '-':
+                case '×':
+                case '÷':
+                    handleOperator(symbol);
+                    break;
+            }
+        }
+
+        // Tangani tombol angka dan titik desimal
+        function handleNumber(number) {
+            if (buffer === "0") {
+                buffer = number;
+            } else if (number === "." && buffer.includes(".")) {
+                return; // Hindari titik desimal ganda
+            } else {
+                buffer += number;
+            }
+        }
+
+        // Tangani operator matematika
+        function handleOperator(operator) {
+            if (runningTotal === 0) {
+                runningTotal = parseFloat(buffer);
+            } else {
+                calculate(parseFloat(buffer));
+            }
+            previousOperator = operator;
+            buffer = "0";
+        }
+
+        // Lakukan perhitungan
+        function calculate(number) {
+            switch (previousOperator) {
+                case '+':
+                    runningTotal += number;
+                    break;
+                case '-':
+                    runningTotal -= number;
+                    break;
+                case '×':
+                    runningTotal *= number;
+                    break;
+                case '÷':
+                    if (number === 0) {
+                        buffer = "Error";
+                        runningTotal = 0;
+                        previousOperator = null;
+                        return;
+                    }
+                    runningTotal /= number;
+                    break;
+            }
+        }
+
+        // Perbarui tampilan layar
+        function updateScreen() {
+            screen.value = buffer;
+        }
+
+        // Inisialisasi event listener untuk semua tombol
+        function init() {
+            document.querySelectorAll('.btn').forEach(button => {
+                button.addEventListener('click', handleClick);
+            });
+        }
+
+        // Jalankan fungsi inisialisasi
+        init();
+    </script>
+</body>
+</html>
